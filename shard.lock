@@ -1,9 +1,5 @@
 version: 2.0
 shards:
-  ameba:
-    git: https://github.com/crystal-ameba/ameba.git
-    version: 0.14.3
-
   archive:
     git: https://github.com/hkalexling/archive.cr.git
     version: 0.5.0
@@ -30,11 +26,11 @@ shards:
 
   http_proxy:
     git: https://github.com/mamantoha/http_proxy.git
-    version: 0.8.0
+    version: 0.12.1
 
   image_size:
-    git: https://github.com/hkalexling/image_size.cr.git
-    version: 0.5.0
+    git: https://github.com/n-pn/image_size.cr.git
+    version: 0.5.0+git.commit.f32a0abbaed1879880ad82e17c657263a157386d
 
   kemal:
     git: https://github.com/kemalcr/kemal.git

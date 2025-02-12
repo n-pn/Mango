@@ -80,10 +80,7 @@ class DirEntry < Entry
       begin
         data.not_nil!
         size = ImageSize.get data
-        sizes << {
-          "width"  => size.width,
-          "height" => size.height,
-        }
+        sizes << {"width" => size.width, "height" => size.height}
       rescue e
         Logger.warn "Failed to read page #{i} of entry #{@dir_path}. #{e}"
         sizes << {"width" => 1000_i32, "height" => 1000_i32}
