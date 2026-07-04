@@ -8,4 +8,4 @@ yarn.lock
 mango
 .env
 *.md
-public/*
+public
