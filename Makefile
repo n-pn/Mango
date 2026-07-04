@@ -16,6 +16,12 @@ build: libs
 static: uglify | libs
 	crystal build src/mango.cr --release --progress --static --error-trace
 
+# EXPERIMENTAL: multi-threaded build. Do NOT use in production yet.
+# LRUCache and Library shared state are not guarded with Mutex.
+# Use this only to test if Crystal's MT runtime works on your platform.
+build-mt: libs
+	crystal build src/mango.cr --release --progress --error-trace -Dpreview_mt
+
 libs:
 	shards install --production
 

@@ -176,7 +176,16 @@ struct APIRouter
         entry = title.get_entry eid
         raise "Entry ID `#{eid}` of `#{title.title}` not found" if entry.nil?
 
-        img = entry.get_thumbnail || entry.read_page 1
+        img = entry.get_thumbnail
+        if img.nil?
+          # No cached thumbnail yet — serve page 1 directly for low latency.
+          # Enqueue thumbnail generation in the background so subsequent
+          # requests for this cover are served from the fast cached thumbnail.
+          img = entry.read_page 1
+          spawn do
+            ThumbnailWorker.default.enqueue(entry).receive
+          end
+        end
         raise "Failed to get cover of `#{title.title}/#{entry.title}`" \
            if img.nil?
 

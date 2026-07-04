@@ -1,5 +1,6 @@
 require "kemal"
 require "kemal-session"
+require "./thumbnail_worker"
 require "./library/*"
 require "./handlers/*"
 require "./util/*"

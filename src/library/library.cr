@@ -352,10 +352,10 @@ class Library
 
     entries.each do |e|
       unless e.get_thumbnail
-        e.generate_thumbnail
-        # Sleep after each generation to minimize the impact on disk IO
-        #   and CPU
-        sleep 1.seconds
+        # Enqueue to the dedicated worker thread. The event loop fiber blocks
+        # on `.receive` but yields control to the scheduler while waiting,
+        # so HTTP handlers remain responsive during bulk generation.
+        ThumbnailWorker.default.enqueue(e).receive
       end
       thumbnail_ctx.increment
     end
