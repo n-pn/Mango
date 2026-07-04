@@ -1,9 +1,9 @@
 {
-	"name": "mango",
-	"version": "0.27.0",
-	"private": true,
-	"scripts": {
-		"build": "npm --prefix web install && npm --prefix web run build",
-		"dev": "npm --prefix web run dev"
-	}
+  "name": "mango",
+  "version": "0.27.1",
+  "private": true,
+  "scripts": {
+    "build": "npm --prefix web install && npm --prefix web run build",
+    "dev": "npm --prefix web run dev"
+  }
 }
