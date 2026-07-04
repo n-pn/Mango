@@ -1,8 +1,7 @@
 struct MainRouter
   def initialize
     get "/login" do |env|
-      base_url = Config.current.base_url
-      render "src/views/login.html.ecr"
+      send_file env, "public/index.html", "text/html"
     end
 
     get "/logout" do |env|

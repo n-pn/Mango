@@ -16,17 +16,7 @@ def is_admin?(env) : Bool
 end
 
 macro layout(name)
-  base_url = Config.current.base_url
-  is_admin = is_admin? env
-  begin
-    page = {{name}}
-    render "src/views/#{{{name}}}.html.ecr", "src/views/layout.html.ecr"
-  rescue e
-    message = e.to_s
-    Logger.error message
-    page = "Error"
-    render "src/views/message.html.ecr", "src/views/layout.html.ecr"
-  end
+  send_file env, "public/index.html", "text/html"
 end
 
 macro send_error_page(msg)
@@ -173,5 +163,13 @@ module HTTP
         yield client, path
       end
     end
+  end
+end
+
+require "mg"
+
+class MG::Migration
+  private def sqlite? : Bool
+    true
   end
 end

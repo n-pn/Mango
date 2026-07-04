@@ -533,6 +533,63 @@ struct APIRouter
       end
     end
 
+    get "/api/admin/users" do |env|
+      begin
+        users = Storage.default.list_users.map do |u|
+          {
+            "username" => u[0],
+            "admin"    => u[1],
+          }
+        end
+        send_json env, {
+          "success" => true,
+          "users"   => users,
+        }.to_json
+      rescue e
+        Logger.error e
+        send_json env, {
+          "success" => false,
+          "error"   => e.message,
+        }.to_json
+      end
+    end
+
+    post "/api/admin/user/new" do |env|
+      begin
+        username = env.params.json["username"].as String
+        password = env.params.json["password"].as String
+        admin = env.params.json["admin"].as Bool
+        
+        Storage.default.new_user username, password, admin
+        send_json env, { "success" => true }.to_json
+      rescue e
+        Logger.error e
+        send_json env, {
+          "success" => false,
+          "error"   => e.message,
+        }.to_json
+      end
+    end
+
+    post "/api/admin/user/update/:original_username" do |env|
+      begin
+        original_username = env.params.url["original_username"]
+        username = env.params.json["username"].as String
+        password = env.params.json["password"]?.try(&.as(String)) || ""
+        admin = env.params.json["admin"].as Bool
+
+        Storage.default.update_user \
+          original_username, username, password, admin
+        send_json env, { "success" => true }.to_json
+      rescue e
+        Logger.error e
+        send_json env, {
+          "success" => false,
+          "error"   => e.message,
+        }.to_json
+      end
+    end
+
     Koa.describe "Updates the reading progress of an entry or the whole title for the current user", <<-MD
       When `eid` is provided, sets the reading progress of the entry to `page`.
 
@@ -1236,6 +1293,82 @@ struct APIRouter
           "success" => true,
           "tags"    => tags,
         }.to_json
+      rescue e
+        Logger.error e
+        send_json env, {
+          "success" => false,
+          "error"   => e.message,
+        }.to_json
+      end
+    end
+
+    get "/api/tags_with_counts" do |env|
+      begin
+        tags = Storage.default.list_tags.map do |tag|
+          {
+            "tag"   => tag,
+            "count" => Storage.default.get_tag_titles(tag).size,
+          }
+        end
+        tags.sort! do |a, b|
+          (b["count"].as(Int32) <=> a["count"].as(Int32)).or(a["tag"].as(String) <=> b["tag"].as(String))
+        end
+        send_json env, {
+          "success" => true,
+          "tags"    => tags,
+        }.to_json
+      rescue e
+        Logger.error e
+        send_json env, {
+          "success" => false,
+          "error"   => e.message,
+        }.to_json
+      end
+    end
+
+    get "/api/version" do |env|
+      send_json env, {
+        "success" => true,
+        "version" => MANGO_VERSION
+      }.to_json
+    end
+
+    get "/api/tags/titles/:tag" do |env|
+      begin
+        username = get_username env
+        tag = URI.decode_www_form(env.params.url["tag"])
+
+        title_ids = Storage.default.get_tag_titles tag
+        titles = title_ids.map { |id| Library.default.get_title id }.select(Title)
+
+        sort_opt = SortOptions.from_info_json Library.default.dir, username
+        titles = sort_titles titles, sort_opt, username
+
+        percentages = titles.map &.load_percentage username
+
+        json = JSON.build do |j|
+          j.object do
+            j.field "success" do
+              j.bool true
+            end
+            j.field "titles" do
+              j.array do
+                titles.each do |t|
+                  j.raw t.build_json depth: 0
+                end
+              end
+            end
+            j.field "percentages" do
+              j.array do
+                percentages.each do |p|
+                  j.number p
+                end
+              end
+            end
+          end
+        end
+
+        send_json env, json
       rescue e
         Logger.error e
         send_json env, {

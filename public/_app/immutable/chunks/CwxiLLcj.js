@@ -1,0 +1,1 @@
+import{Q as e}from"./BYRsA1c3.js";import"./D-n_r6xp.js";var t=e(`system`),n=e([]),r=e(!1);e(null);function i(e,t,r=6e3){let i=Math.random().toString(36).substring(2,9);n.update(n=>[...n,{id:i,type:e,text:t}]),r>0&&setTimeout(()=>{a(i)},r)}function a(e){n.update(t=>t.filter(t=>t.id!==e))}export{t as a,a as i,n,r,i as t};

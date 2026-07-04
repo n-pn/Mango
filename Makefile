@@ -4,12 +4,11 @@ INSTALL_DIR=$(PREFIX)/bin
 all: uglify | build
 
 uglify:
-	yarn
-	yarn uglify
+	npm --prefix web install
+	npm --prefix web run build
 
 setup: libs
-	yarn
-	yarn gulp dev
+	npm --prefix web install
 
 build: libs
 	crystal build src/mango.cr --release --progress --error-trace
