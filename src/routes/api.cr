@@ -179,13 +179,12 @@ struct APIRouter
         img = entry.get_thumbnail
         if img.nil?
           # No cached thumbnail yet — serve page 1 directly for low latency.
-          # Enqueue thumbnail generation in the background so subsequent
-          # requests for this cover are served from the fast cached thumbnail.
+          # Fire-and-forget: the worker fiber will generate and cache the
+          # thumbnail so future requests are served from the fast cached copy.
           img = entry.read_page 1
-          spawn do
-            ThumbnailWorker.default.enqueue(entry).receive
-          end
+          ThumbnailWorker.default.enqueue entry
         end
+
         raise "Failed to get cover of `#{title.title}/#{entry.title}`" \
            if img.nil?
 

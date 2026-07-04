@@ -352,9 +352,10 @@ class Library
 
     entries.each do |e|
       unless e.get_thumbnail
-        # Enqueue to the dedicated worker thread. The event loop fiber blocks
-        # on `.receive` but yields control to the scheduler while waiting,
-        # so HTTP handlers remain responsive during bulk generation.
+        # Enqueue to the dedicated worker fiber and wait for completion.
+        # While ImageMagick runs inside generate_thumbnail (via Process.run),
+        # this fiber suspends and yields to the scheduler so HTTP handlers
+        # continue to respond normally.
         ThumbnailWorker.default.enqueue(e).receive
       end
       thumbnail_ctx.increment

@@ -200,20 +200,40 @@ abstract class Entry
   def generate_thumbnail : Image?
     return if @err_msg
 
-    img = read_page(1).not_nil!
+    img = read_page 1
+    return if img.nil?
+
     begin
-      size = ImageSize.get img.data
-      if size.height > size.width
-        thumbnail = ImageSize.resize img.data, width: 200
-      else
-        thumbnail = ImageSize.resize img.data, height: 300
+      input = IO::Memory.new img.data
+      output = IO::Memory.new
+
+      # Pipe the raw page image into ImageMagick and receive the resized
+      # JPEG on stdout. Process.run uses non-blocking pipe I/O under the
+      # hood, so this fiber yields to the Crystal scheduler while the
+      # ImageMagick subprocess runs — HTTP handlers remain responsive.
+      #
+      # Geometry "200x300>":
+      #   - Fits within a 200×300 bounding box
+      #   - ">" means only shrink, never enlarge
+      status = Process.run(
+        "convert",
+        args: ["-", "-thumbnail", "200x300>", "-quality", "85", "jpeg:-"],
+        input: input,
+        output: output,
+        error: Process::Redirect::Close
+      )
+
+      unless status.success?
+        Logger.warn "ImageMagick convert exited non-zero for #{path}"
+        return img
       end
-      img.data = thumbnail
-      img.size = thumbnail.size
-      unless img.mime == "image/webp"
-        # image_size.cr resizes non-webp images to jpg
-        img.mime = "image/jpeg"
-      end
+
+      data = output.to_slice
+      img.data = data
+      img.size = data.size
+      img.mime = "image/jpeg"
+      img.filename = "#{File.basename(path, File.extname(path))}.jpg"
+
       Storage.default.save_thumbnail @id, img
     rescue e
       Logger.warn "Failed to generate thumbnail for file #{path}. #{e}"
@@ -221,6 +241,7 @@ abstract class Entry
 
     img
   end
+
 
   def get_thumbnail : Image?
     Storage.default.get_thumbnail @id

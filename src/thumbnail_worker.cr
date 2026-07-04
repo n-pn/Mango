@@ -1,16 +1,22 @@
-# ThumbnailWorker runs thumbnail generation in a dedicated OS thread so the
-# Kemal/fiber event loop is never blocked by CPU-bound image resizing.
+# ThumbnailWorker serialises thumbnail generation in a dedicated fiber.
 #
-# Design:
-#   - A single worker thread is used intentionally. On a low-power quad-core
-#     like the Intel N5095, a single background thread keeps one CPU core busy
-#     on thumbnails while the other cores remain available for the web server
-#     and OS tasks. Parallel thumbnail workers would thrash disk I/O on slow
-#     storage and cause thermal throttling.
-#   - Jobs are queued in a bounded channel (capacity 200). If the queue fills
-#     up, `enqueue` blocks the caller — this is intentional backpressure.
-#   - Each job carries a `done` channel so callers can optionally await
-#     completion (synchronous) or fire-and-forget via `spawn`.
+# Why a dedicated fiber instead of inline generation?
+#   - Prevents multiple concurrent ImageMagick processes from spawning
+#     simultaneously when many cover requests arrive at once.
+#   - Ensures the bulk generation loop in Library does not skip entries
+#     because a previous ImageMagick process is still running.
+#
+# Why NOT a separate OS Thread (Thread.new)?
+#   - Crystal's Channel and fiber scheduler are NOT thread-safe without
+#     the -Dpreview_mt compile flag.
+#   - Using Thread.new without preview_mt causes the "can't resume a
+#     running fiber" crash seen previously.
+#
+# How does this keep the HTTP event loop responsive?
+#   - generate_thumbnail calls Process.run which pipes data to/from
+#     ImageMagick via non-blocking I/O. While waiting for the subprocess,
+#     the Crystal fiber scheduler runs other fibers (HTTP handlers, etc).
+#   - The event loop is therefore never blocked by CPU-bound image work.
 
 class ThumbnailWorker
   alias Job = NamedTuple(entry: Entry, done: Channel(Nil))
@@ -18,37 +24,33 @@ class ThumbnailWorker
   use_default
 
   @channel : Channel(Job?)
-  @thread : Thread?
 
   def initialize
     @channel = Channel(Job?).new(capacity: 200)
-    start_worker_thread
+    start_worker_fiber
   end
 
-  # Enqueue an entry for thumbnail generation and return a channel that will
-  # receive a value when the job is complete. The caller can choose to:
+  # Enqueues an entry for thumbnail generation and returns a channel that
+  # will receive a value when the job completes. The caller can:
   #
-  #   - Await completion:    worker.enqueue(entry).receive
-  #   - Fire and forget:     spawn { worker.enqueue(entry).receive }
+  #   - Await synchronously:  worker.enqueue(entry).receive
+  #   - Fire and forget:      worker.enqueue(entry)
   def enqueue(entry : Entry) : Channel(Nil)
     done = Channel(Nil).new(1)
     @channel.send({entry: entry, done: done})
     done
   end
 
-  # Gracefully stop the worker thread. Waits for the current job (if any)
-  # to finish before the thread exits.
+  # Signals the worker fiber to stop after finishing the current job.
   def stop
     @channel.send nil
-    @thread.try &.join
   end
 
-  private def start_worker_thread
-    @thread = Thread.new do
-      Logger.debug "ThumbnailWorker: worker thread started (tid=#{Thread.current.object_id})"
+  private def start_worker_fiber
+    spawn(name: "thumbnail_worker") do
+      Logger.debug "ThumbnailWorker: worker fiber started"
       loop do
         job = @channel.receive
-        # nil is the sentinel value signalling shutdown
         break if job.nil?
 
         entry = job[:entry]
@@ -58,11 +60,10 @@ class ThumbnailWorker
         rescue e
           Logger.warn "ThumbnailWorker: failed for #{entry.path} — #{e}"
         ensure
-          # Always signal completion so waiting fibers are unblocked
           job[:done].send nil
         end
       end
-      Logger.debug "ThumbnailWorker: worker thread stopped"
+      Logger.debug "ThumbnailWorker: worker fiber stopped"
     end
   end
 end
