@@ -1,7 +1,7 @@
 struct MainRouter
   def initialize
     get "/login" do |env|
-      send_file env, "public/index.html", "text/html"
+      layout "login"
     end
 
     get "/logout" do |env|

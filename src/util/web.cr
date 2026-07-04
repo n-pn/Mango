@@ -16,7 +16,14 @@ def is_admin?(env) : Bool
 end
 
 macro layout(name)
-  send_file env, "public/index.html", "text/html"
+  {% if flag?(:release) %}
+    file = FS.get "/index.html"
+    slice = Bytes.new file.size
+    file.read slice
+    send_file env, slice, "text/html"
+  {% else %}
+    send_file env, "public/index.html", "text/html"
+  {% end %}
 end
 
 macro send_error_page(msg)

@@ -23,7 +23,7 @@ struct ReaderRouter
     end
 
     get "/reader/:title/:entry/:page" do |env|
-      send_file env, "public/index.html", "text/html"
+      layout "reader"
     end
   end
 end
