@@ -29,8 +29,8 @@ dependencies:
     github: at-grandpa/clim
   duktape:
     github: jessedoyle/duktape.cr
-  myhtml:
-    github: kostya/myhtml
+  lexbor:
+    github: kostya/lexbor
   http_proxy:
     github: mamantoha/http_proxy
   image_size:

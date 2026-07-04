@@ -1,5 +1,5 @@
 require "duktape/runtime"
-require "myhtml"
+require "lexbor"
 require "xml"
 
 require "./subscriptions"
@@ -432,8 +432,8 @@ class Plugin
       html = env.require_string 0
       selector = env.require_string 1
 
-      myhtml = Myhtml::Parser.new html
-      ary = myhtml.css(selector).map(&.to_html).to_a
+      parser = Lexbor.new html
+      ary = parser.css(selector).map(&.to_html).to_a
 
       ary_idx = env.push_array
       ary.each_with_index do |str, i|
@@ -450,8 +450,8 @@ class Plugin
       html = env.require_string 0
 
       begin
-        parser = Myhtml::Parser.new html
-        str = parser.body!.children.first.inner_text
+        parser = Lexbor.new html
+        str = parser.body!.child!.inner_text
 
         env.push_string str
       rescue
@@ -468,8 +468,8 @@ class Plugin
       name = env.require_string 1
 
       begin
-        parser = Myhtml::Parser.new html
-        attr = parser.body!.children.first.attribute_by name
+        parser = Lexbor.new html
+        attr = parser.body!.child!.attribute_by name
         env.push_string attr.not_nil!
       rescue
         env.push_undefined
