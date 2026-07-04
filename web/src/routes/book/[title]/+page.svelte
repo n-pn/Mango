@@ -3,7 +3,7 @@
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
   import { apiRequest } from '$lib/utils/api';
-  import { isAdmin, addAlert } from '$lib/utils/store';
+  import { appState, addAlert } from '$lib/utils/store.svelte';
   import Card from '$lib/components/Card.svelte';
   import EntryModal from '$lib/components/EntryModal.svelte';
 
@@ -380,7 +380,7 @@
       <div class="book-info">
         <div class="title-row">
           <h2>{bookDetails.display_name}</h2>
-          {#if $isAdmin}
+          {#if appState.isAdmin}
             <button class="edit-book-btn" onclick={() => showEditBookModal = true} title="Edit Book Settings">
               <i class="fas fa-cog"></i> Edit Settings
             </button>
@@ -395,7 +395,7 @@
           {#each bookTags as tag}
             <span class="tag-capsule">
               <a href="/tags/{encodeURIComponent(tag)}">{tag}</a>
-              {#if $isAdmin}
+              {#if appState.isAdmin}
                 <button class="delete-tag-btn" onclick={() => removeTag(tag)} aria-label="Remove tag">
                   &times;
                 </button>
@@ -403,7 +403,7 @@
             </span>
           {/each}
           
-          {#if $isAdmin}
+          {#if appState.isAdmin}
             {#if showTagInput}
               <form class="new-tag-form" onsubmit={e => { e.preventDefault(); addTag(newTagValue); }}>
                 <input 
@@ -414,7 +414,7 @@
                   bind:this={tagInputRef}
                   onblur={() => setTimeout(() => showTagInput = false, 200)}
                 />
-                <button type="submit" class="add-tag-submit"><i class="fas fa-plus"></i></button>
+                <button type="submit" class="add-tag-submit" aria-label="Add tag"><i class="fas fa-plus"></i></button>
               </form>
             {:else}
               <button class="add-tag-btn" onclick={() => { showTagInput = true; setTimeout(() => tagInputRef?.focus(), 50); }}>
@@ -437,7 +437,7 @@
           bind:value={searchQuery}
         />
         {#if searchQuery}
-          <button class="clear-search-btn" onclick={() => searchQuery = ''}>
+          <button class="clear-search-btn" onclick={() => searchQuery = ''} aria-label="Clear search">
             <i class="fas fa-times"></i>
           </button>
         {/if}
@@ -494,7 +494,7 @@
                 progress={entryPercentages[idx]} 
                 page="title" 
                 selected={!!selectedIds[entry.id]}
-                selectable={$isAdmin}
+                selectable={appState.isAdmin}
                 onselect={() => toggleSelect(entry.id)}
                 onclick={() => openChapter(entry, idx)}
               />
@@ -557,7 +557,7 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label">Upload Cover Image</label>
+          <span class="form-label">Upload Cover Image</span>
           <div class="cover-uploader">
             <div class="cover-uploader-preview">
               <img src={bookDetails.cover_url || '/img/banner.png'} alt="Preview" />
@@ -581,7 +581,7 @@
         </div>
 
         <div class="form-group title-bulk-progress">
-          <label class="form-label">Bulk Mark Progress</label>
+          <span class="form-label">Bulk Mark Progress</span>
           <div class="bulk-progress-row">
             <button class="btn btn-secondary" onclick={() => markAllProgress(1)}>
               <i class="fas fa-check-double"></i> Mark all read (100%)

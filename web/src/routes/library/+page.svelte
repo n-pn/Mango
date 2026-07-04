@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { apiRequest } from '$lib/utils/api';
-  import { addAlert } from '$lib/utils/store';
+  import { addAlert } from '$lib/utils/store.svelte';
   import { goto } from '$app/navigation';
   import Card from '$lib/components/Card.svelte';
 
@@ -113,7 +113,7 @@
           bind:value={searchQuery}
         />
         {#if searchQuery}
-          <button class="clear-search-btn" onclick={() => searchQuery = ''}>
+          <button class="clear-search-btn" onclick={() => searchQuery = ''} aria-label="Clear search">
             <i class="fas fa-times"></i>
           </button>
         {/if}

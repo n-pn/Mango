@@ -1,6 +1,6 @@
 <script lang="ts">
   import { apiRequest } from '$lib/utils/api';
-  import { isAdmin, addAlert } from '$lib/utils/store';
+  import { appState, addAlert } from '$lib/utils/store.svelte';
   import { goto } from '$app/navigation';
 
   let username = $state('');
@@ -25,7 +25,7 @@
       });
 
       if (data.success) {
-        isAdmin.set(!!data.is_admin);
+        appState.isAdmin = !!data.is_admin;
         addAlert('success', 'Logged in successfully!');
         
         // Redirect to home or callback

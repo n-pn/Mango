@@ -110,7 +110,7 @@
   {#each appState.alerts as alert (alert.id)}
     <div class="alert alert-{alert.type}">
       <span>{alert.text}</span>
-      <button class="alert-close" onclick={() => removeAlert(alert.id)}>
+      <button class="alert-close" onclick={() => removeAlert(alert.id)} aria-label="Close alert">
         <i class="fas fa-times"></i>
       </button>
     </div>
@@ -124,7 +124,7 @@
   <header class="header">
     <div class="header-container">
       <div class="header-left">
-        <button class="menu-toggle" onclick={() => mobileNavOpen = !mobileNavOpen}>
+        <button class="menu-toggle" onclick={() => mobileNavOpen = !mobileNavOpen} aria-label="Toggle menu">
           <i class="fas fa-bars"></i>
         </button>
         <a href="/" class="logo">
@@ -184,7 +184,7 @@
       <div class="mobile-drawer" onclick={e => e.stopPropagation()}>
         <div class="drawer-header">
           <span class="drawer-title">Navigation</span>
-          <button class="drawer-close" onclick={() => mobileNavOpen = false}>
+          <button class="drawer-close" onclick={() => mobileNavOpen = false} aria-label="Close menu">
             <i class="fas fa-times"></i>
           </button>
         </div>

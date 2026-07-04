@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { apiRequest } from '$lib/utils/api';
-  import { addAlert } from '$lib/utils/store';
+  import { addAlert } from '$lib/utils/store.svelte';
 
   interface MissingItem {
     id: string;

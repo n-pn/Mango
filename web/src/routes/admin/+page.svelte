@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import { apiRequest } from '$lib/utils/api';
-  import { theme, addAlert } from '$lib/utils/store';
+  import { appState, addAlert } from '$lib/utils/store.svelte';
 
   // State
   let mangoVersion = $state('0.0.0');
@@ -97,7 +97,7 @@
 
   function handleThemeSelect(e: Event) {
     const val = (e.target as HTMLSelectElement).value as 'light' | 'dark' | 'system';
-    theme.set(val);
+    appState.theme = val;
   }
 </script>
 
@@ -195,7 +195,7 @@
         <select 
           id="theme-select" 
           class="select setting-select" 
-          value={$theme}
+          value={appState.theme}
           onchange={handleThemeSelect}
         >
           <option value="dark">Dark Theme</option>

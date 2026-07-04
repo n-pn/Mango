@@ -3,7 +3,7 @@
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
   import { apiRequest } from '$lib/utils/api';
-  import { addAlert } from '$lib/utils/store';
+  import { addAlert } from '$lib/utils/store.svelte';
 
   // Retrieve parameters from URL
   let originalUsername = $state('');

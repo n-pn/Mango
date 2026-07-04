@@ -3,12 +3,12 @@
   import { page as sveltePage } from '$app/stores';
   import { goto, replaceState } from '$app/navigation';
   import { apiRequest, getPageUrl } from '$lib/utils/api';
-  import { addAlert } from '$lib/utils/store';
+  import { addAlert } from '$lib/utils/store.svelte';
 
   // URL Parameters
-  let tid = $derived($sveltePage.params.tid);
-  let eid = $derived($sveltePage.params.eid);
-  let initialPage = $derived(parseInt($sveltePage.params.page) || 1);
+  let tid = $derived($sveltePage.params.tid ?? '');
+  let eid = $derived($sveltePage.params.eid ?? '');
+  let initialPage = $derived(parseInt($sveltePage.params.page ?? '1') || 1);
 
   // States
   let loading = $state(true);
@@ -41,7 +41,7 @@
   const nextEntry = $derived(entryIndex !== -1 && entryIndex + 1 < book.entries.length ? book.entries[entryIndex + 1] : null);
   const prevEntry = $derived(entryIndex !== -1 && entryIndex - 1 >= 0 ? book.entries[entryIndex - 1] : null);
 
-  onMount(async () => {
+  onMount(() => {
     // Hide default global layout elements (like navigation header/sidebar) if reader is active
     document.body.classList.add('reader-active');
     
@@ -53,7 +53,7 @@
     enableFlipAnimation = localStorage.getItem('enableFlipAnimation') !== 'false';
     enableRightToLeft = localStorage.getItem('enableRightToLeft') === 'true';
 
-    await initializeReader();
+    initializeReader();
 
     // Listeners
     window.addEventListener('keydown', handleKeydown);
@@ -226,13 +226,13 @@
     if (mode === 'continuous') return;
     
     if (e.key === 'ArrowLeft' || e.key === 'k') {
-      flipPage(false ^ (enableRightToLeft ? 1 : 0));
+      flipPage(enableRightToLeft);
     } else if (e.key === 'ArrowRight' || e.key === 'j') {
-      flipPage(true ^ (enableRightToLeft ? 1 : 0));
+      flipPage(!enableRightToLeft);
     }
   }
 
-  function flipPage(isNext: boolean | number) {
+  function flipPage(isNext: boolean) {
     const target = currentPage + (isNext ? 1 : -1);
     if (target <= 0) return;
     
@@ -244,7 +244,7 @@
 
     // Animation
     if (enableFlipAnimation) {
-      flipAnimation = (isNext ^ (enableRightToLeft ? 1 : 0)) ? 'right' : 'left';
+      flipAnimation = (isNext !== enableRightToLeft) ? 'right' : 'left';
       setTimeout(() => {
         flipAnimation = null;
       }, 300);
@@ -267,9 +267,9 @@
       showControls = !showControls;
     } else {
       if (x < leftLimit) {
-        flipPage(false ^ (enableRightToLeft ? 1 : 0));
+        flipPage(enableRightToLeft);
       } else if (x > rightLimit) {
-        flipPage(true ^ (enableRightToLeft ? 1 : 0));
+        flipPage(!enableRightToLeft);
       } else {
         showControls = !showControls;
       }
@@ -350,7 +350,6 @@
         </div>
       {:else}
         <!-- Paged Single Mode -->
-        <!-- svelte-ignore a11y_alt_text -->
         <div 
           class="paged-view"
           class:fit-height={fitType === 'vert'}
@@ -359,6 +358,7 @@
         >
           <img 
             src={items[currentPage - 1].url}
+            alt="Page {currentPage}"
             class="paged-img"
             class:animate-left={flipAnimation === 'left'}
             class:animate-right={flipAnimation === 'right'}
