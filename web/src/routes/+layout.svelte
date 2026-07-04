@@ -66,7 +66,7 @@
   }
 
   async function checkAuth() {
-    if (currentPath === '/login') return;
+    if (currentPath === '/login' || currentPath === '/api') return;
     try {
       const res = await fetch('/api/library');
       if (res.status === 401) {
@@ -117,7 +117,7 @@
   {/each}
 </div>
 
-{#if currentPath === '/login'}
+{#if currentPath === '/login' || currentPath === '/api'}
   {@render children()}
 {:else}
   <!-- Premium Header -->

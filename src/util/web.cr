@@ -20,13 +20,10 @@ macro layout(name)
 end
 
 macro send_error_page(msg)
-  message = {{msg}}
-  base_url = Config.current.base_url
-  is_admin = is_admin? env
-  page = "Error"
-  html = render "src/views/message.html.ecr", "src/views/layout.html.ecr"
-  send_file env, html.to_slice, "text/html"
+  env.response.content_type = "text/html"
+  env.response.print "<!DOCTYPE html><html><head><title>Error</title><meta name='viewport' content='width=device-width, initial-scale=1'><style>body { font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background-color: #121212; color: #f5f5f5; } .container { text-align: center; padding: 2rem; border-radius: 8px; background-color: #1e1e1e; border: 1px solid #333; } a { color: #3498db; text-decoration: none; } a:hover { text-decoration: underline; }</style></head><body><div class='container'><h1>Error</h1><p>#{{{msg}}}</p><p><a href='/'>Go Home</a></p></div></body></html>"
 end
+
 
 macro send_img(env, img)
   cors
@@ -110,9 +107,7 @@ macro render_xml(path)
   send_file env, ECR.render({{path}}).to_slice, "application/xml"
 end
 
-macro render_component(filename)
-  render "src/views/components/#{{{filename}}}.html.ecr"
-end
+
 
 macro get_sort_opt
   sort_method = env.params.query["sort"]?
